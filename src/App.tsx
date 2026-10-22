@@ -4,6 +4,10 @@ import { Icon } from "./icons";
 
 export default function App() {
   useReveal();
+  // The page renders after the browser's own jump to #section, so redo it once mounted.
+  useEffect(() => {
+    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+  }, []);
   return (
     <>
       <Background />
