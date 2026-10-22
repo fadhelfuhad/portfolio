@@ -229,11 +229,17 @@ img { display: block; max-width: 100%; }
 .cursor-dot[data-type="text"] i, .cursor-ring[data-type="text"] i { opacity: 0; }
 .cursor-down .cursor-ring i { width: 28px; height: 28px; }
 .cursor-down .cursor-ring[data-type="hover"] i { width: 44px; height: 44px; }
-.cursor-away .cursor-dot, .cursor-away .cursor-ring { opacity: 0; }
+.cursor-glow { position: fixed; top: 0; left: 0; z-index: -1; width: 0; height: 0; pointer-events: none; display: none; transition: opacity 0.4s; }
+.custom-cursor .cursor-glow { display: block; }
+.cursor-glow::before { content: ""; position: absolute; width: 560px; height: 560px; left: -280px; top: -280px; border-radius: 50%; background: radial-gradient(circle, rgba(34, 211, 238, 0.17), rgba(129, 140, 248, 0.09) 38%, transparent 68%); }
+.cursor-away .cursor-dot, .cursor-away .cursor-ring, .cursor-away .cursor-glow { opacity: 0; }
 
 /* scroll reveal */
-.reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
-.reveal.in { opacity: 1; transform: none; }
+.reveal { opacity: 0; transform: translateY(28px) scale(0.98); filter: blur(6px); transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), filter 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+.reveal.in { opacity: 1; transform: none; filter: none; }
+/* once revealed, hover lifts shouldn't wait for the stagger delay */
+.card.reveal.in { transition: opacity 0.8s, transform 0.3s, filter 0.8s, box-shadow 0.3s, border-color 0.3s; }
+.stat strong { font-variant-numeric: tabular-nums; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 1180px) {
@@ -270,6 +276,6 @@ img { display: block; max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .glow, .particle, .avatar, .live { animation: none; }
-  .reveal { opacity: 1; transform: none; transition: none; }
+  .reveal { opacity: 1; transform: none; filter: none; transition: none; }
   *, *::before, *::after { transition-duration: 0.01ms !important; }
 }

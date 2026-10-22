@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ACHIEVEMENTS, EDUCATION, EXPERIENCE, FACTS, NAV, PROFILE, PROJECTS, SKILLS, STATS, STORY } from "./data";
 import { Icon } from "./icons";
 import { Cursor } from "./cursor";
@@ -31,16 +31,24 @@ export default function App() {
 
 /* ---------- shared ---------- */
 
-// Fades sections in as they scroll into view.
+// Fades things in (rising, coming into focus) the first time they scroll into view.
+// Siblings that appear together are staggered so a grid fills in one card at a time.
 function useReveal() {
   useEffect(() => {
-    const els = document.querySelectorAll(".reveal");
+    const els = document.querySelectorAll<HTMLElement>(".reveal");
+    els.forEach((el) => {
+      const siblings = el.parentElement ? [...el.parentElement.children].filter((c) => c.classList.contains("reveal")) : [];
+      el.style.transitionDelay = `${Math.min(siblings.indexOf(el), 6) * 90}ms`;
+    });
     const io = new IntersectionObserver(
       (entries) =>
         entries.forEach((e) => {
           if (e.isIntersecting) {
-            e.target.classList.add("in");
-            io.unobserve(e.target);
+            const el = e.target as HTMLElement;
+            el.classList.add("in");
+            io.unobserve(el);
+            // Drop the stagger once it has played, so hover effects respond instantly.
+            setTimeout(() => (el.style.transitionDelay = ""), 1500);
           }
         }),
       { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
@@ -48,6 +56,42 @@ function useReveal() {
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
+}
+
+// Counts up from 0 to a value like "5+" the first time it's on screen.
+function Counter({ value }: { value: string }) {
+  const [, num, suffix] = value.match(/^(\d+)(.*)$/) ?? [, "", value];
+  const target = Number(num);
+  const [shown, setShown] = useState(num ? 0 : target);
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !num) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return setShown(target);
+    let frame = 0;
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      const start = performance.now();
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / 1600);
+        setShown(Math.round(target * (1 - Math.pow(1 - t, 3))));
+        if (t < 1) frame = requestAnimationFrame(step);
+      };
+      frame = requestAnimationFrame(step);
+    });
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [num, target]);
+  return (
+    <strong ref={ref}>
+      {num ? shown : ""}
+      {suffix}
+    </strong>
+  );
 }
 
 function Section({ id, eyebrow, title, sub, children }: { id: string; eyebrow: string; title: string; sub: string; children: ReactNode }) {
@@ -170,7 +214,7 @@ function Hero() {
       <div className="stats">
         {STATS.map((s, i) => (
           <div key={s.label} className={`stat card ${tone(i)} reveal`}>
-            <strong>{s.value}</strong>
+            <Counter value={s.value} />
             <span>{s.label}</span>
           </div>
         ))}
