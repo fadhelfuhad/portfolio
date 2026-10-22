@@ -116,12 +116,20 @@ function Nav() {
           </a>
         ))}
       </div>
-      <a className="btn outline hire" href="#contact">
-        Hire Me
-      </a>
-      <button className="menu" onClick={() => setOpen((o) => !o)} aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open}>
-        <Icon name={open ? "close" : "menu"} size={22} />
-      </button>
+      <div className="nav-end">
+        <a className="nav-icon" href={PROFILE.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn profile" title="LinkedIn">
+          <Icon name="linkedin" size={17} />
+        </a>
+        <a className="nav-icon" href={PROFILE.github} target="_blank" rel="noreferrer" aria-label="GitHub profile" title="GitHub">
+          <Icon name="github" size={17} />
+        </a>
+        <a className="btn outline hire" href="#contact">
+          Hire Me
+        </a>
+        <button className="menu" onClick={() => setOpen((o) => !o)} aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open}>
+          <Icon name={open ? "close" : "menu"} size={22} />
+        </button>
+      </div>
     </nav>
   );
 }
@@ -290,6 +298,15 @@ function Projects() {
                   <a className="btn primary small" href={p.link} target="_blank" rel="noreferrer">
                     Open live site <Icon name="external" size={14} />
                   </a>
+                  {p.repo ? (
+                    <a className="btn ghost small" href={p.repo} target="_blank" rel="noreferrer">
+                      <Icon name="github" size={15} /> View code
+                    </a>
+                  ) : (
+                    <span className="btn ghost small disabled" title="This repository is private">
+                      <Icon name="github" size={15} /> Private repo
+                    </span>
+                  )}
                   <span className="lock">
                     <Icon name="lock" size={13} /> {p.note}
                   </span>

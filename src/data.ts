@@ -138,7 +138,9 @@ export const PROJECTS = [
       "A private command centre for a job search. It turns CSV trackers, tailored CVs and cover letters into a calm workflow: one role at a time, follow-up nudges, daily goals and streaks, and plain-language search like “frontend in Dubai I haven't applied to”. Protected by a custom sign-in with signed session cookies.",
     tags: ["React 19", "TypeScript", "Vite", "Vercel Middleware", "Python"],
     link: "https://fadhel-jobhunt.vercel.app/#today",
-    note: "Private · sign-in required",
+    note: "Sign-in required",
+    // The repo holds CVs and contact details, so it stays private.
+    repo: null,
   },
   {
     title: "Timezone W.L.L Inventory",
@@ -149,6 +151,7 @@ export const PROJECTS = [
     tags: ["React", "NestJS", "Prisma", "PostgreSQL", "MUI", "TanStack Query", "OCR"],
     link: "https://timezone-wll.vercel.app/dashboard",
     note: "Staff sign-in required",
+    repo: "https://github.com/fadhelfuhad/timezone-wll",
   },
   {
     title: "Mobile Delivery App",

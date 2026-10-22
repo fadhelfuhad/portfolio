@@ -49,6 +49,9 @@ img { display: block; max-width: 100%; }
 .links a { padding: 7px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 500; color: var(--ink-2); transition: color 0.2s, background 0.25s, box-shadow 0.25s; }
 .links a:hover { color: var(--ink); }
 .links a.on { background: var(--cyan); color: #04121a; font-weight: 600; box-shadow: 0 0 22px rgba(34, 211, 238, 0.45); }
+.nav-end { display: flex; align-items: center; gap: 10px; }
+.nav-icon { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-2); border: 1px solid var(--line); background: rgba(10, 14, 36, 0.55); transition: color 0.2s, border-color 0.2s, box-shadow 0.25s, transform 0.2s; }
+.nav-icon:hover { color: var(--cyan-ink); border-color: rgba(34, 211, 238, 0.6); box-shadow: 0 0 18px rgba(34, 211, 238, 0.3); transform: translateY(-1px); }
 .menu { display: none; border: 1px solid var(--line); background: rgba(10, 14, 36, 0.6); color: var(--ink); border-radius: 12px; width: 42px; height: 42px; place-items: center; cursor: pointer; }
 
 /* ---------- buttons ---------- */
@@ -62,6 +65,8 @@ img { display: block; max-width: 100%; }
 .btn.outline:hover { background: rgba(34, 211, 238, 0.1); box-shadow: 0 0 20px rgba(34, 211, 238, 0.3); }
 .btn.small { height: 40px; padding: 0 18px; font-size: 14px; }
 .btn.wide { width: 100%; }
+.btn.disabled { opacity: 0.55; cursor: not-allowed; }
+.btn.disabled:hover { transform: none; border-color: var(--line); }
 
 /* ---------- hero ---------- */
 .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 130px 24px 60px; max-width: var(--max); margin: 0 auto; }
