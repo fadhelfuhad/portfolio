@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ACHIEVEMENTS, EDUCATION, EXPERIENCE, FACTS, NAV, PROFILE, PROJECTS, SKILLS, STATS, STORY } from "./data";
 import { Icon } from "./icons";
+import { Cursor } from "./cursor";
 
 export default function App() {
   useReveal();
@@ -11,6 +12,7 @@ export default function App() {
   return (
     <>
       <Background />
+      <Cursor />
       <Nav />
       <main>
         <Hero />

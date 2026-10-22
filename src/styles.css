@@ -214,6 +214,23 @@ img { display: block; max-width: 100%; }
 .footer p { color: var(--muted); font-size: 14px; margin-top: 6px; }
 .footer .copy-line { grid-column: 1 / -1; margin: 0; font-size: 13px; }
 
+/* custom cursor: exact dot plus a trailing ring that grows over clickable things */
+.cursor-dot, .cursor-ring { position: fixed; top: 0; left: 0; z-index: 9999; pointer-events: none; display: none; will-change: transform; transition: opacity 0.2s; }
+.custom-cursor .cursor-dot, .custom-cursor .cursor-ring { display: block; }
+/* like tryparcel.com: the dot inverts what's under it, so it stays visible on cyan buttons */
+.cursor-dot { mix-blend-mode: difference; }
+.custom-cursor, .custom-cursor * { cursor: none !important; }
+.custom-cursor input:not([type="checkbox"]):not([type="radio"]), .custom-cursor textarea { cursor: text !important; }
+.cursor-dot i, .cursor-ring i { position: absolute; left: 0; top: 0; display: block; border-radius: 50%; transform: translate(-50%, -50%); }
+.cursor-dot i { width: 8px; height: 8px; background: var(--cyan-ink); box-shadow: 0 0 10px var(--cyan); transition: width 0.15s, height 0.15s, opacity 0.15s; }
+.cursor-ring i { width: 36px; height: 36px; border: 1px solid color-mix(in srgb, var(--cyan) 45%, transparent); transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1), height 0.3s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s, background 0.25s, opacity 0.2s; }
+.cursor-ring[data-type="hover"] i { width: 54px; height: 54px; border-color: rgba(255, 255, 255, 0.75); background: color-mix(in srgb, var(--cyan) 8%, transparent); }
+.cursor-dot[data-type="hover"] i { opacity: 0.6; }
+.cursor-dot[data-type="text"] i, .cursor-ring[data-type="text"] i { opacity: 0; }
+.cursor-down .cursor-ring i { width: 28px; height: 28px; }
+.cursor-down .cursor-ring[data-type="hover"] i { width: 44px; height: 44px; }
+.cursor-away .cursor-dot, .cursor-away .cursor-ring { opacity: 0; }
+
 /* scroll reveal */
 .reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .reveal.in { opacity: 1; transform: none; }
