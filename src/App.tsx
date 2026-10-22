@@ -31,14 +31,21 @@ export default function App() {
 
 /* ---------- shared ---------- */
 
-// Fades things in (rising, coming into focus) the first time they scroll into view.
-// Siblings that appear together are staggered so a grid fills in one card at a time.
+// Eases things into place the first time they scroll into view: up by default, or from
+// the side with .from-left / .from-right, or a small pop with .pop. Siblings are staggered
+// (a parent's data-step sets the gap), and children wait for the card around them.
 function useReveal() {
   useEffect(() => {
     const els = document.querySelectorAll<HTMLElement>(".reveal");
+    const delays = new Map<Element, number>();
     els.forEach((el) => {
-      const siblings = el.parentElement ? [...el.parentElement.children].filter((c) => c.classList.contains("reveal")) : [];
-      el.style.transitionDelay = `${Math.min(siblings.indexOf(el), 6) * 90}ms`;
+      const parent = el.parentElement;
+      const siblings = parent ? [...parent.children].filter((c) => c.classList.contains("reveal")) : [];
+      const step = Number(parent?.dataset.step ?? 90);
+      const outer = parent?.closest(".reveal");
+      const delay = (outer ? (delays.get(outer) ?? 0) + 250 : 0) + Math.min(siblings.indexOf(el), 14) * step;
+      delays.set(el, delay);
+      el.style.transitionDelay = `${delay}ms`;
     });
     const io = new IntersectionObserver(
       (entries) =>
@@ -227,17 +234,19 @@ function About() {
   return (
     <Section id="about" eyebrow="About" title="About Me" sub="Frontend developer by trade, IT engineer by background.">
       <div className="about">
-        <article className="card tone-0 story reveal">
-          <h3>My Story</h3>
+        <article className="card tone-0 story reveal from-left" data-step="140">
+          <h3 className="reveal from-left">My Story</h3>
           {STORY.map((p, i) => (
-            <p key={i}>{p}</p>
+            <p key={i} className="reveal from-left">
+              {p}
+            </p>
           ))}
         </article>
-        <aside className="card tone-2 facts reveal">
+        <aside className="card tone-2 facts reveal from-right">
           <h4>Quick Facts</h4>
-          <ul>
+          <ul data-step="80">
             {FACTS.map((f) => (
-              <li key={f.label}>
+              <li key={f.label} className="reveal from-right">
                 <span className="ic">
                   <Icon name={f.icon} size={16} />
                 </span>
@@ -270,9 +279,9 @@ function Skills() {
               <h3>{s.title}</h3>
             </div>
             <p>{s.blurb}</p>
-            <div className="chips">
+            <div className="chips" data-step="45">
               {s.items.map((t) => (
-                <span key={t} className="chip">
+                <span key={t} className="chip reveal pop">
                   {t}
                 </span>
               ))}
@@ -291,7 +300,7 @@ function Experience() {
         {EXPERIENCE.map((e, i) => (
           <li key={e.company} className={i % 2 ? "right" : "left"}>
             <span className="node" aria-hidden />
-            <article className={`card ${tone(i)} job reveal`}>
+            <article className={`card ${tone(i)} job reveal ${i % 2 ? "from-right" : "from-left"}`}>
               <div className="card-title">
                 <span className="ic">
                   <Icon name="briefcase" size={16} />
@@ -302,9 +311,11 @@ function Experience() {
                 <b>{e.company}</b> · {e.period}
               </p>
               <p className="place">{e.place}</p>
-              <ul>
+              <ul data-step="110">
                 {e.points.map((p) => (
-                  <li key={p}>{p}</li>
+                  <li key={p} className={`reveal ${i % 2 ? "from-right" : "from-left"}`}>
+                    {p}
+                  </li>
                 ))}
               </ul>
             </article>
