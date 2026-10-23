@@ -2,9 +2,11 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "rea
 import { ACHIEVEMENTS, EDUCATION, EXPERIENCE, FACTS, NAV, PROFILE, PROJECTS, SKILLS, STATS, STORY } from "./data";
 import { Icon } from "./icons";
 import { Cursor } from "./cursor";
+import { Space } from "./space";
 
 export default function App() {
   useReveal();
+  useDepthParallax();
   // The page renders after the browser's own jump to #section, so redo it once mounted.
   useEffect(() => {
     if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
@@ -65,6 +67,96 @@ function useReveal() {
   }, []);
 }
 
+// How far the page has scrolled through an element, 0 when its top reaches `from` (a
+// fraction of the viewport) and 1 when its bottom does. Stored as --p on the element.
+function useScrollProgress<T extends HTMLElement>(from = 0.6) {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const r = el.getBoundingClientRect();
+      const p = Math.min(1, Math.max(0, (innerHeight * from - r.top) / Math.max(1, r.height)));
+      el.style.setProperty("--p", p.toFixed(4));
+    };
+    const onScroll = () => (frame ||= requestAnimationFrame(update));
+    update();
+    addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("resize", onScroll);
+    return () => {
+      removeEventListener("scroll", onScroll);
+      removeEventListener("resize", onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, [from]);
+  return ref;
+}
+
+// Depth parallax: elements marked data-depth sit further back while they are low on the
+// screen (smaller, softer, dimmer, lower) and come forward to full size at the centre,
+// easing back a little as they leave. A higher data-depth sits deeper and travels more.
+// Elements marked data-layer drift at that fraction of the scroll, like a far backdrop.
+// Elements marked data-fade come out of the dark as they enter from below and sink back into
+// it as they leave at the top, both ways as you scroll.
+// Uses the separate scale/translate properties so it stacks with reveal and hover transforms.
+function useDepthParallax() {
+  useEffect(() => {
+    const cards = [...document.querySelectorAll<HTMLElement>("[data-depth]")];
+    const layers = [...document.querySelectorAll<HTMLElement>("[data-layer]")];
+    const fades = [...document.querySelectorAll<HTMLElement>("[data-fade]")];
+    const docTop = (el: HTMLElement) => {
+      let y = 0;
+      for (let n: HTMLElement | null = el; n; n = n.offsetParent as HTMLElement | null) y += n.offsetTop;
+      return y;
+    };
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const vh = innerHeight;
+      for (const el of cards) {
+        const mid = docTop(el) - scrollY + el.offsetHeight / 2;
+        if (still || mid < -vh || mid > vh * 2) {
+          if (still) el.style.scale = el.style.translate = el.style.filter = "";
+          continue;
+        }
+        const t = Math.max(-1, Math.min(1, (mid - vh / 2) / (vh / 2 + el.offsetHeight / 2)));
+        const d = (t > 0 ? t : -t * 0.5) * Number(el.dataset.depth);
+        el.style.scale = String(1 - 0.16 * d);
+        el.style.translate = `0 ${(t * 70 * Number(el.dataset.depth)).toFixed(1)}px`;
+        el.style.filter = `blur(${(d * 3).toFixed(2)}px) brightness(${(1 - d * 0.4).toFixed(3)})`;
+      }
+      for (const el of fades) {
+        if (still) {
+          el.style.filter = "";
+          continue;
+        }
+        const top = docTop(el) - scrollY;
+        const bottom = top + el.offsetHeight;
+        const fadeIn = Math.max(0, Math.min(1, (vh - top) / (vh * 0.35)));
+        const fadeOut = Math.max(0, Math.min(1, (bottom - 90) / (vh * 0.35)));
+        el.style.filter = `brightness(${(0.2 + 0.8 * Math.min(fadeIn, fadeOut)).toFixed(3)})`;
+      }
+      for (const el of layers) {
+        const sec = el.parentElement!;
+        const r = sec.getBoundingClientRect();
+        el.style.translate = still ? "" : `-50% ${((r.top + r.height / 2 - vh / 2) * -Number(el.dataset.layer)).toFixed(1)}px`;
+      }
+    };
+    const onScroll = () => (frame ||= requestAnimationFrame(update));
+    update();
+    addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("resize", onScroll);
+    return () => {
+      removeEventListener("scroll", onScroll);
+      removeEventListener("resize", onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+}
+
 // Counts up from 0 to a value like "5+" the first time it's on screen.
 function Counter({ value }: { value: string }) {
   const [, num, suffix] = value.match(/^(\d+)(.*)$/) ?? [, "", value];
@@ -101,15 +193,119 @@ function Counter({ value }: { value: string }) {
   );
 }
 
-function Section({ id, eyebrow, title, sub, children }: { id: string; eyebrow: string; title: string; sub: string; children: ReactNode }) {
+function Section({ id, eyebrow, title, sub, backdrop, children }: { id: string; eyebrow: string; title: string; sub: string; backdrop?: string; children: ReactNode }) {
   return (
-    <section id={id} className="section">
+    <section id={id} className={`section ${backdrop ? "has-backdrop" : ""}`}>
+      {backdrop && (
+        <span className="backdrop-word" data-layer="0.25" aria-hidden>
+          {backdrop}
+        </span>
+      )}
       <header className="section-head reveal">
         <span className="pill-label">{eyebrow}</span>
         <h2>{title}</h2>
         <p>{sub}</p>
       </header>
       {children}
+    </section>
+  );
+}
+
+// A section that pins in place while vertical scrolling slides its cards sideways. Below
+// 900px wide, on screens too short to fit it, or with reduced motion it becomes a swipeable row instead.
+function Reel({ id, eyebrow, title, sub, children }: { id: string; eyebrow: string; title: string; sub: string; children: ReactNode }) {
+  const section = useRef<HTMLElement>(null);
+  const track = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const s = section.current, t = track.current;
+    if (!s || !t) return;
+    let distance = 0, frame = 0;
+    let on = false;
+    // The card in focus is full size; the others shrink and dim the further they are from it.
+    // The focus point travels from the first card (start) to the last card (end).
+    const focus = (p: number, shift: number) => {
+      const cards = [...t.children] as HTMLElement[];
+      if (!cards.length || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const first = cards[0], last = cards[cards.length - 1];
+      const pad = parseFloat(getComputedStyle(t).paddingLeft);
+      const start = pad + first.offsetWidth / 2;
+      const end = t.clientWidth - pad - last.offsetWidth / 2;
+      const at = start + (end - start) * p;
+      for (const c of cards) {
+        const x = c.offsetLeft - t.offsetLeft + c.offsetWidth / 2 - shift;
+        const d = Math.min(1, Math.abs(x - at) / (c.offsetWidth + 24));
+        c.style.scale = String(1 - 0.14 * d);
+        c.style.filter = d > 0.01 ? `brightness(${(1 - 0.35 * d).toFixed(3)})` : "";
+      }
+    };
+    const update = () => {
+      frame = 0;
+      if (!on) {
+        // Swipe row: the bar follows the row's own sideways scroll.
+        const room = t.scrollWidth - t.clientWidth;
+        const p = room > 0 ? t.scrollLeft / room : 0;
+        s.style.setProperty("--p", p.toFixed(4));
+        focus(p, t.scrollLeft);
+        return;
+      }
+      const p = Math.min(1, Math.max(0, -s.getBoundingClientRect().top / Math.max(1, distance)));
+      t.style.transform = `translate3d(${-p * distance}px, 0, 0)`;
+      s.style.setProperty("--p", p.toFixed(4));
+      focus(p, p * distance);
+    };
+    const measure = () => {
+      // Pin only when the section fits the screen height once pinned.
+      on = innerWidth >= 900 && !matchMedia("(prefers-reduced-motion: reduce)").matches;
+      s.classList.toggle("pinned", on);
+      const pin = s.firstElementChild as HTMLElement;
+      if (on && pin.scrollHeight > innerHeight + 1) {
+        on = false;
+        s.classList.remove("pinned");
+      }
+      if (!on) {
+        s.style.height = "";
+        t.style.transform = "";
+        update();
+        return;
+      }
+      // Measure to the last card plus the track's end padding; scrollWidth can drop that padding.
+      const last = t.lastElementChild as HTMLElement | null;
+      const end = last ? last.offsetLeft + last.offsetWidth + parseFloat(getComputedStyle(t).paddingRight) : 0;
+      distance = Math.max(0, end - t.clientWidth);
+      s.style.height = `${innerHeight + distance}px`;
+      update();
+    };
+    const onScroll = () => (frame ||= requestAnimationFrame(update));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(t);
+    addEventListener("scroll", onScroll, { passive: true });
+    t.addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      t.removeEventListener("scroll", onScroll);
+      removeEventListener("scroll", onScroll);
+      removeEventListener("resize", measure);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return (
+    <section id={id} ref={section} className="reel">
+      <div className="reel-pin">
+        <header className="section-head reveal">
+          <span className="pill-label">{eyebrow}</span>
+          <h2>{title}</h2>
+          <p>{sub}</p>
+        </header>
+        <div ref={track} className="reel-track">
+          {children}
+        </div>
+        <i className="reel-progress" aria-hidden>
+          <b />
+        </i>
+      </div>
     </section>
   );
 }
@@ -122,14 +318,7 @@ function Background() {
       <i className="glow glow-a" />
       <i className="glow glow-b" />
       <i className="glow glow-c" />
-      <i className="grid" />
-      {Array.from({ length: 18 }, (_, i) => (
-        <i
-          key={i}
-          className="particle"
-          style={{ left: `${(i * 37) % 100}%`, top: `${(i * 53) % 100}%`, animationDelay: `${(i % 6) * 0.9}s`, animationDuration: `${5 + (i % 5)}s` }}
-        />
-      ))}
+      <Space />
     </div>
   );
 }
@@ -234,7 +423,7 @@ function About() {
   return (
     <Section id="about" eyebrow="About" title="About Me" sub="Frontend developer by trade, IT engineer by background.">
       <div className="about">
-        <article className="card tone-0 story reveal from-left" data-step="140">
+        <article className="card tone-0 story" data-fade data-step="140">
           <h3 className="reveal from-left">My Story</h3>
           {STORY.map((p, i) => (
             <p key={i} className="reveal from-left">
@@ -242,7 +431,7 @@ function About() {
             </p>
           ))}
         </article>
-        <aside className="card tone-2 facts reveal from-right">
+        <aside className="card tone-2 facts" data-fade>
           <h4>Quick Facts</h4>
           <ul data-step="80">
             {FACTS.map((f) => (
@@ -268,8 +457,7 @@ function About() {
 
 function Skills() {
   return (
-    <Section id="skills" eyebrow="Expertise" title="Skills & Tools" sub="The technologies I use to ship reliable web and mobile products.">
-      <div className="grid-3">
+    <Reel id="skills" eyebrow="Expertise" title="Skills & Tools" sub="The technologies I use to ship reliable web and mobile products.">
         {SKILLS.map((s, i) => (
           <article key={s.title} className={`card ${tone(i)} skill reveal`}>
             <div className="card-title">
@@ -288,15 +476,16 @@ function Skills() {
             </div>
           </article>
         ))}
-      </div>
-    </Section>
+    </Reel>
   );
 }
 
 function Experience() {
+  const line = useScrollProgress<HTMLOListElement>(0.55);
   return (
     <Section id="experience" eyebrow="Career" title="Experience" sub="Leading frontend work on production web and mobile apps.">
-      <ol className="timeline">
+      <ol ref={line} className="timeline">
+        <i className="timeline-fill" aria-hidden />
         {EXPERIENCE.map((e, i) => (
           <li key={e.company} className={i % 2 ? "right" : "left"}>
             <span className="node" aria-hidden />
@@ -328,8 +517,7 @@ function Experience() {
 
 function Projects() {
   return (
-    <Section id="projects" eyebrow="Portfolio" title="Featured Projects" sub="Things I've built, on my own and at work.">
-      <div className="grid-2">
+    <Reel id="projects" eyebrow="Portfolio" title="Featured Projects" sub="Things I've built, on my own and at work.">
         {PROJECTS.map((p, i) => (
           <article key={p.title} className={`card ${tone(i)} project reveal`}>
             <div className="shot">
@@ -372,8 +560,7 @@ function Projects() {
             </div>
           </article>
         ))}
-      </div>
-    </Section>
+    </Reel>
   );
 }
 
@@ -420,10 +607,10 @@ function ProjectArt({ kind }: { kind: "mobile" | "dashboard" }) {
 
 function Education() {
   return (
-    <Section id="education" eyebrow="Learning" title="Education" sub="Degree and certification.">
+    <Section id="education" eyebrow="Learning" title="Education" sub="Degree and certification." backdrop="Learning">
       <div className="grid-2 narrow">
         {EDUCATION.map((e, i) => (
-          <article key={e.title} className={`card ${tone(i * 2)} edu reveal`}>
+          <article key={e.title} className={`card ${tone(i * 2)} edu reveal`} data-depth={i % 2 ? 1.5 : 1}>
             <div className="card-title">
               <span className="ic">
                 <Icon name="cap" size={16} />
@@ -444,10 +631,10 @@ function Education() {
 
 function Achievements() {
   return (
-    <Section id="achievements" eyebrow="Highlights" title="Achievements" sub="Recognition and experience beyond the day job.">
+    <Section id="achievements" eyebrow="Highlights" title="Achievements" sub="Recognition and experience beyond the day job." backdrop="Highlights">
       <div className="grid-2 narrow">
         {ACHIEVEMENTS.map((a, i) => (
-          <article key={a.title} className={`card ${tone(i)} achievement reveal`}>
+          <article key={a.title} className={`card ${tone(i)} achievement reveal`} data-depth={i % 2 ? 1.5 : 1}>
             <span className="ic big">
               <Icon name={a.icon} size={20} />
             </span>
