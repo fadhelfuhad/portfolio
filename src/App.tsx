@@ -295,7 +295,7 @@ function Skills() {
 
 function Experience() {
   return (
-    <Section id="experience" eyebrow="Career" title="Experience" sub="From IT intern to leading frontend work on production apps.">
+    <Section id="experience" eyebrow="Career" title="Experience" sub="Leading frontend work on production web and mobile apps.">
       <ol className="timeline">
         {EXPERIENCE.map((e, i) => (
           <li key={e.company} className={i % 2 ? "right" : "left"}>

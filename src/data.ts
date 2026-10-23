@@ -7,7 +7,7 @@ export const PROFILE = {
   title: "Senior Frontend Developer",
   stack: "React · Vue 3 · React Native · TypeScript",
   intro:
-    "I build production web and mobile apps with React, Vue 3, Nuxt 3 and React Native, and I bring hands-on IT infrastructure experience across Microsoft 365, Azure and networking. Based in Manama, Bahrain.",
+    "A software developer with 5+ years of hands-on, traditional development behind me, building production web and mobile apps with React, Vue 3, Nuxt 3 and React Native. Today I use Cursor AI and Claude AI every day to ship faster. Based in Manama, Bahrain.",
   email: "fuad.fadhel97@gmail.com",
   phone: "+973 3625 0240",
   phoneHref: "tel:+97336250240",
@@ -20,14 +20,15 @@ export const PROFILE = {
 
 export const STATS = [
   { value: "5+", label: "Years experience" },
-  { value: "4", label: "Companies" },
+  { value: "3", label: "Companies" },
   { value: "4", label: "Websites shipped" },
 ];
 
 export const STORY = [
-  "I studied Information Systems at the University of Bahrain and started in IT, as an intern at Euro Motors, where I replaced a paper-based approval process with an automated requisition system built on SharePoint, Power Automate and PowerApps.",
-  "At Pavilion Renewables I did both sides of the job: I ran the Microsoft 365 tenant, servers and network, and I built the company's web presence, delivering 4 websites from planning to launch and React features across its platforms.",
-  "Since 2023 I've been a Senior Frontend Developer at Parcel, where I've architected production apps in React, Vue 3, Nuxt 3 and React Native Expo, led the redesign of the core dashboards, and rebuilt the mobile app from scratch. I use Cursor AI and Claude AI day to day, which cut our average feature delivery time by 25%.",
+  "I'm a Senior Frontend Developer at Parcel. Most of my 5+ years has been traditional software development: turning business requirements into clean, maintainable TypeScript, building components and state by hand, and integrating custom backend APIs.",
+  "Since 2023 I've architected production apps at Parcel in React, Vue 3, Nuxt 3 and React Native Expo, led the complete redesign of the core company dashboards, and rebuilt the mobile app from scratch.",
+  "Now I use Cursor AI and Claude AI frequently, on top of that foundation rather than instead of it. Bringing them into our workflow cut average feature delivery time by 25%.",
+  "Before Parcel, I built React features and 4 company websites at Pavilion Renewables while running its Microsoft 365 tenant, servers and network.",
 ];
 
 export const FACTS = [
@@ -71,14 +72,14 @@ export const SKILLS: { icon: IconName; title: string; blurb: string; items: stri
   {
     icon: "wrench",
     title: "Tooling & AI",
-    blurb: "A tidy Git workflow and AI-assisted development.",
+    blurb: "A tidy Git workflow, with Cursor AI and Claude AI in daily use.",
     items: ["Git", "Vite", "pnpm", "ESLint", "Prettier", "Biome", "Husky", "Cursor AI", "Claude AI"],
   },
   {
     icon: "server",
     title: "IT Infrastructure",
     blurb: "Microsoft 365, Azure and networks, backed by a CCNA.",
-    items: ["Microsoft 365", "Azure AD / Entra ID", "Azure VMs & VNets", "Windows Server", "Linux", "TCP/IP, DNS, DHCP, VPN", "Hyper-V / VMware", "Power Automate", "PowerApps", "SharePoint"],
+    items: ["Microsoft 365", "Azure VMs & VNets", "Windows Server", "Linux", "TCP/IP, DNS, DHCP, VPN", "Hyper-V / VMware", "Power Automate", "PowerApps", "SharePoint"],
   },
 ];
 
@@ -113,18 +114,8 @@ export const EXPERIENCE = [
     points: [
       "Developed and delivered 4 company websites from planning to launch with WordPress and Elementor Pro: the first in 27 days, the rest in under a week each.",
       "Built frontend features across company web platforms with React JS and integrated custom APIs for live data.",
-      "Managed the Microsoft 365 tenant (Exchange Online, SharePoint, Teams, OneDrive) and Azure AD / Entra ID, including conditional access, MFA and SSO.",
+      "Managed the Microsoft 365 tenant (Exchange Online, SharePoint, Teams, OneDrive), including user provisioning, permissions and MFA.",
       "Administered Windows Server and Linux, virtual machines, firewalls and the LAN/WAN, VPN and VoIP network.",
-    ],
-  },
-  {
-    role: "IT Intern",
-    company: "Euro Motors",
-    period: "Jun 2020 – Sep 2020",
-    place: "Sitra, Manama",
-    points: [
-      "Built an automated requisition approval system with SharePoint, Power Automate and PowerApps, replacing the manual authorisation process company-wide.",
-      "Supported end users with hardware, software and connectivity issues, and managed IT inventory and vendor scheduling.",
     ],
   },
 ];
