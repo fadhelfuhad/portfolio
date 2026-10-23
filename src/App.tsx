@@ -268,13 +268,25 @@ function Reel({ id, eyebrow, title, sub, children }: { id: string; eyebrow: stri
       focus(p, p * distance);
     };
     const measure = () => {
-      // Pin only when the section fits the screen height once pinned.
+      // Pin only when the section fits the screen height once pinned. On phones, cards that
+      // are a little too tall are shrunk to fit rather than giving up on pinning.
       on = !matchMedia("(prefers-reduced-motion: reduce)").matches;
       s.classList.toggle("pinned", on);
+      t.style.scale = t.style.marginBottom = "";
       const pin = s.firstElementChild as HTMLElement;
-      if (on && pin.scrollHeight > pin.clientHeight + 1) {
-        on = false;
-        s.classList.remove("pinned");
+      // Measure top-aligned: centred content that overflows upwards isn't counted.
+      pin.style.justifyContent = "flex-start";
+      const over = pin.scrollHeight - pin.clientHeight;
+      pin.style.justifyContent = "";
+      if (on && over > 1) {
+        const fit = (t.offsetHeight - over - 16) / t.offsetHeight;
+        if (innerWidth < 900 && fit >= 0.6) {
+          t.style.scale = fit.toFixed(4);
+          t.style.marginBottom = `${-(1 - fit) * t.offsetHeight}px`;
+        } else {
+          on = false;
+          s.classList.remove("pinned");
+        }
       }
       if (!on) {
         s.style.height = "";

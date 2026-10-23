@@ -189,6 +189,11 @@ img { display: block; max-width: 100%; }
   .reel.pinned .project-body { padding: 18px 20px 20px; gap: 10px; }
   .reel.pinned .project-body h3 { font-size: 20px; }
   .reel.pinned .project-body p { -webkit-line-clamp: 3; }
+  .reel.pinned .project-links { gap: 8px; }
+  .reel.pinned .project-links .btn.small { height: 36px; padding: 0 14px; font-size: 13.5px; }
+  .reel.pinned .project-links .lock { display: none; }
+  .reel.pinned .reel-track { transform-origin: 50% 0; }
+  .reel.pinned .reel-pin { padding-top: 80px; }
 }
 /* progress bar lit like the experience timeline: a dim track, a glowing fill and an orb at its tip */
 .reel-progress { display: block; position: relative; width: min(320px, 60vw); height: 2px; margin: 18px auto 0; border-radius: 2px; }
