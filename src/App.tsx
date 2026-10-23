@@ -211,8 +211,8 @@ function Section({ id, eyebrow, title, sub, backdrop, children }: { id: string; 
   );
 }
 
-// A section that pins in place while vertical scrolling slides its cards sideways. Below
-// 900px wide, on screens too short to fit it, or with reduced motion it becomes a swipeable row instead.
+// A section that pins in place while vertical scrolling slides its cards sideways, on phones
+// too. On screens too short to fit it, or with reduced motion, it becomes a swipeable row instead.
 function Reel({ id, eyebrow, title, sub, children }: { id: string; eyebrow: string; title: string; sub: string; children: ReactNode }) {
   const section = useRef<HTMLElement>(null);
   const track = useRef<HTMLDivElement>(null);
@@ -222,15 +222,16 @@ function Reel({ id, eyebrow, title, sub, children }: { id: string; eyebrow: stri
     let distance = 0, frame = 0;
     let on = false;
     // The card in focus is full size; the others shrink and dim the further they are from it.
-    // The focus point travels from the first card (start) to the last card (end).
-    const focus = (p: number, shift: number) => {
+    // The focus point travels from the first card (start) to the last card (end), unless
+    // given (the screen's centre on phones).
+    const focus = (p: number, shift: number, centre?: number) => {
       const cards = [...t.children] as HTMLElement[];
       if (!cards.length || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       const first = cards[0], last = cards[cards.length - 1];
       const pad = parseFloat(getComputedStyle(t).paddingLeft);
       const start = pad + first.offsetWidth / 2;
       const end = t.clientWidth - pad - last.offsetWidth / 2;
-      const at = start + (end - start) * p;
+      const at = centre ?? start + (end - start) * p;
       for (const c of cards) {
         const x = c.offsetLeft - t.offsetLeft + c.offsetWidth / 2 - shift;
         const d = Math.min(1, Math.abs(x - at) / (c.offsetWidth + 24));
@@ -249,16 +250,29 @@ function Reel({ id, eyebrow, title, sub, children }: { id: string; eyebrow: stri
         return;
       }
       const p = Math.min(1, Math.max(0, -s.getBoundingClientRect().top / Math.max(1, distance)));
-      t.style.transform = `translate3d(${-p * distance}px, 0, 0)`;
       s.style.setProperty("--p", p.toFixed(4));
+      const cards = [...t.children] as HTMLElement[];
+      if (cards.length > 1 && cards[0].offsetWidth > t.clientWidth * 0.6) {
+        // One card fills a phone screen, so step from card to card: each one rests in the
+        // centre for a while before the next slides in.
+        const centred = (c: HTMLElement) => Math.min(distance, Math.max(0, c.offsetLeft - t.offsetLeft + c.offsetWidth / 2 - t.clientWidth / 2));
+        const x = p * (cards.length - 1);
+        const i = Math.min(cards.length - 2, Math.floor(x));
+        const f = Math.min(1, Math.max(0, (x - i - 0.2) / 0.6));
+        const shift = centred(cards[i]) + (centred(cards[i + 1]) - centred(cards[i])) * f * f * (3 - 2 * f);
+        t.style.transform = `translate3d(${-shift}px, 0, 0)`;
+        focus(p, shift, t.clientWidth / 2);
+        return;
+      }
+      t.style.transform = `translate3d(${-p * distance}px, 0, 0)`;
       focus(p, p * distance);
     };
     const measure = () => {
       // Pin only when the section fits the screen height once pinned.
-      on = innerWidth >= 900 && !matchMedia("(prefers-reduced-motion: reduce)").matches;
+      on = !matchMedia("(prefers-reduced-motion: reduce)").matches;
       s.classList.toggle("pinned", on);
       const pin = s.firstElementChild as HTMLElement;
-      if (on && pin.scrollHeight > innerHeight + 1) {
+      if (on && pin.scrollHeight > pin.clientHeight + 1) {
         on = false;
         s.classList.remove("pinned");
       }

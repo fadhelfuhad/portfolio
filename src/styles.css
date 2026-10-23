@@ -161,7 +161,7 @@ img { display: block; max-width: 100%; }
 .reel-track > .skill { width: min(380px, 80vw); }
 .reel-track > .project { width: min(500px, 82vw); }
 .reel.pinned { padding-top: 0; }
-.reel.pinned .reel-pin { position: sticky; top: 0; height: 100vh; overflow: hidden; justify-content: center; padding-top: 64px; }
+.reel.pinned .reel-pin { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; justify-content: center; padding-top: 64px; }
 .reel.pinned .section-head { margin-bottom: 36px; }
 .reel.pinned .section-head h2 { font-size: clamp(34px, 4.4vw, 54px); }
 .reel.pinned .reel-track { overflow: visible; will-change: transform; }
@@ -177,12 +177,18 @@ img { display: block; max-width: 100%; }
   .reel-track .project-body h3 { font-size: 22px; }
   .reel-track .project-links { margin-top: 4px; }
 }
-/* short laptop screens: trim the pinned heading so the cards still fit */
-@media (max-height: 760px) {
+/* phones and short laptop screens: trim the pinned heading so the cards still fit */
+@media (max-height: 760px), (max-width: 899px) {
   .reel.pinned .section-head .pill-label, .reel.pinned .section-head p { display: none; }
   .reel.pinned .section-head { margin-bottom: 22px; }
   .reel.pinned .section-head h2 { margin-top: 0; }
   .reel.pinned .project { min-height: 300px; }
+}
+@media (max-width: 899px) {
+  .reel.pinned .project .shot { aspect-ratio: 16 / 8; }
+  .reel.pinned .project-body { padding: 18px 20px 20px; gap: 10px; }
+  .reel.pinned .project-body h3 { font-size: 20px; }
+  .reel.pinned .project-body p { -webkit-line-clamp: 3; }
 }
 /* progress bar lit like the experience timeline: a dim track, a glowing fill and an orb at its tip */
 .reel-progress { display: block; position: relative; width: min(320px, 60vw); height: 2px; margin: 18px auto 0; border-radius: 2px; }
